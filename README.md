@@ -60,14 +60,13 @@ docker run -p 5000:5000 -d
 El contenedor ahora estará corriendo en segundo plano, y la aplicación Flask será accesible a través del puerto mapeado en tu máquina.
 
 ### Uso de la Solución
-Puedes interactuar con la aplicación de dos maneras principales: a través de la interfaz web (si usas index.html) o directamente llamando a la API endpoint.
 
-1. Interfaz Web (Usando index.html)
 Si has incluido el archivo index.html en la ubicación correcta (templates/index.html) antes de construir la imagen, puedes acceder a la interfaz web abriendo tu navegador en:
 
 http://localhost:5000/
-La página index.html mostrará un formulario simple para ingresar los datos demográficos y seleccionar los síntomas. Al hacer clic en el botón, el JavaScript incrustado en la página recolectará los datos y los enviará al endpoint /predict de tu aplicación Flask mediante una solicitud POST. El resultado de la predicción será mostrado en la misma página.
 
+La página index.html mostrará un formulario simple para ingresar los datos demográficos y seleccionar los síntomas. Al hacer clic en el botón el resultado de la predicción será mostrado en la misma página.
 
+![](https://github.com/MarioSolano98/Simulador-de-Predicci-n-de-Enfermedad-con-Docker/blob/567faf1daa72479c9db4a761bc096cb160dfa6b1/Web%20de%20la%20soluci%C3%B3n.png?raw=true)
 
 En caso de datos insuficientes o un error interno, la respuesta contendrá un mensaje de error en la clave prediction.
