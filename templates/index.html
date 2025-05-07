@@ -24,17 +24,15 @@
         .resultado-leve { background-color: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
         .resultado-aguda { background-color: #ffedd5; color: #c2410c; border: 1px solid #fed7aa; }
         .resultado-cronica { background-color: #fde2e2; color: #be123c; border: 1px solid #fecdd3; }
-         /* Add style for Terminal */
-        .resultado-terminal { background-color: #ffe4e6; color: #881337; border: 1px solid #fecdd3; }
         .resultado-loading { background-color: #e0e7ff; color: #3730a3; border: 1px solid #c7d2fe; } /* Estilo para "Cargando..." */
 
         /* Alineación de checkboxes/radios */
         input[type="checkbox"], input[type="radio"] {
-            margin-right: 0.5rem; /* mr-2 */
-            vertical-align: middle;
+           margin-right: 0.5rem; /* mr-2 */
+           vertical-align: middle;
         }
         label {
-            vertical-align: middle;
+           vertical-align: middle;
         }
     </style>
      <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -116,15 +114,8 @@
         </form>
 
         <div id="resultado" class="mt-6 p-4 rounded-lg text-center font-semibold hidden">
-        </div>
-
-        <div class="mt-6 pt-6 border-t border-gray-200">
-             <h2 class="text-lg font-semibold text-gray-700 text-center mb-4">Descargar Reporte</h2>
-             <a href="/download_report" download="reporte_de_predicciones.txt" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gray-500 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400">
-                Descargar Reporte de Predicciones (.txt)
-             </a>
-        </div>
-        </div>
+            </div>
+    </div>
 
     <script>
         // Referencia al formulario y al div de resultado
@@ -135,7 +126,7 @@
         // URL del endpoint del backend Flask (ajustar si es necesario)
         const backendUrl = '/predict'; // Asume que Flask corre en el mismo dominio/puerto
 
-        // Function to assign CSS class based on result
+        // Función para asignar clase CSS según el resultado
         function getResultClass(predictionText) {
             if (predictionText.startsWith("ERROR:")) return 'resultado-error';
             switch (predictionText) {
@@ -143,34 +134,32 @@
                 case "ENFERMEDAD LEVE": return 'resultado-leve';
                 case "ENFERMEDAD AGUDA": return 'resultado-aguda';
                 case "ENFERMEDAD CRÓNICA": return 'resultado-cronica';
-                case "ENFERMEDAD TERMINAL": return 'resultado-terminal'; // Add class for Terminal
-                default: return 'resultado-error'; // Default class for unexpected responses
+                default: return 'resultado-error'; // Clase por defecto para respuestas inesperadas
             }
         }
 
-
-        // Event listener for form submission
+        // Event listener para el envío del formulario
         form.addEventListener('submit', async function(event) {
-            event.preventDefault(); // Prevent actual form submission
-            submitButton.disabled = true; // Disable button while processing
+            event.preventDefault(); // Prevenir el envío real del formulario
+            submitButton.disabled = true; // Deshabilitar botón mientras se procesa
             resultadoDiv.textContent = 'Procesando...';
-            resultadoDiv.className = 'mt-6 p-4 rounded-lg text-center font-semibold resultado-loading'; // Loading style
+            resultadoDiv.className = 'mt-6 p-4 rounded-lg text-center font-semibold resultado-loading'; // Estilo "cargando"
             resultadoDiv.classList.remove('hidden');
 
-            // --- Collect Form Data ---
+            // --- Recolectar Datos del Formulario ---
             const ageInput = document.getElementById('age').value;
             const temperatureInput = document.getElementById('temperature').value;
             const sexRadio = document.querySelector('input[name="sex"]:checked');
 
             const age = ageInput ? parseInt(ageInput, 10) : null;
             const temperature = temperatureInput ? parseFloat(temperatureInput) : null;
-            // Send null if 'NA' is selected or sex radio is not found/checked
+            // Enviar 'NA' si no se selecciona F o M, o null si el elemento no existe
             const sex = sexRadio ? (sexRadio.value === 'NA' ? null : sexRadio.value) : null;
 
 
             const formData = {
                 age: age,
-                sex: sex,
+                sex: sex, // Enviar null si es 'NA' o no seleccionado
                 temperature: temperature,
                 itching: document.getElementById('itching').checked,
                 skin_rash: document.getElementById('skin_rash').checked,
@@ -180,42 +169,37 @@
                 stomach_pain: document.getElementById('stomach_pain').checked
             };
 
-            // --- Send Data to Flask Backend ---
+            // --- Enviar Datos al Backend Flask ---
             try {
                 const response = await fetch(backendUrl, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify(formData), // Send data as JSON
+                    body: JSON.stringify(formData), // Enviar datos como JSON
                 });
 
-                // Use response.json() and check response.ok
-                const result = await response.json();
-
                 if (!response.ok) {
-                     // If the HTTP response is not successful (e.g. 400, 500)
-                     // The error message is expected to be in the 'prediction' field of the JSON response
-                     const errorText = result.prediction || `Error del servidor: ${response.status} ${response.statusText}`;
-                     throw new Error(errorText); // Throw an error to be caught by the catch block
-                 }
+                    // Si la respuesta HTTP no es exitosa (ej. 404, 500)
+                    throw new Error(`Error del servidor: ${response.status} ${response.statusText}`);
+                }
 
+                const result = await response.json(); // Esperar la respuesta JSON del backend
 
-                // --- Display Backend Result ---
+                // --- Mostrar Resultado del Backend ---
                 const predictionText = result.prediction || "Error: Respuesta inesperada del servidor.";
                 resultadoDiv.textContent = predictionText;
-                resultadoDiv.className = 'mt-6 p-4 rounded-lg text-center font-semibold'; // Base classes
-                resultadoDiv.classList.add(getResultClass(predictionText)); // Add specific class
+                resultadoDiv.className = 'mt-6 p-4 rounded-lg text-center font-semibold'; // Clases base
+                resultadoDiv.classList.add(getResultClass(predictionText)); // Añadir clase específica
 
             } catch (error) {
-                // --- Handle Errors (Network or Fetch Errors or server-side errors) ---
+                // --- Manejar Errores (Red o del Fetch) ---
                 console.error('Error al contactar el backend:', error);
-                // Display the error message received or a generic one
-                resultadoDiv.textContent = error.message.startsWith('ERROR:') ? error.message : `Error de conexión o procesamiento: ${error.message}`;
+                resultadoDiv.textContent = `Error de conexión: ${error.message}`;
                 resultadoDiv.className = 'mt-6 p-4 rounded-lg text-center font-semibold resultado-error';
             } finally {
-                submitButton.disabled = false; // Re-enable the button
-                resultadoDiv.classList.remove('hidden'); // Ensure the div is visible
+                 submitButton.disabled = false; // Rehabilitar el botón
+                 resultadoDiv.classList.remove('hidden'); // Asegurarse que el div sea visible
             }
         });
     </script>
