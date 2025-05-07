@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Predicción de Estado de Enfermedad (con Backend)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Fuente Inter */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Estilo para mensajes de resultado */
+        #resultado {
+            margin-top: 1.5rem; /* mt-6 */
+            padding: 1rem; /* p-4 */
+            border-radius: 0.5rem; /* rounded-lg */
+            font-weight: 600; /* font-semibold */
+            text-align: center;
+            transition: background-color 0.3s ease, color 0.3s ease; /* Transición suave */
+        }
+        .resultado-error { background-color: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
+        .resultado-no-enfermo { background-color: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
+        .resultado-leve { background-color: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
+        .resultado-aguda { background-color: #ffedd5; color: #c2410c; border: 1px solid #fed7aa; }
+        .resultado-cronica { background-color: #fde2e2; color: #be123c; border: 1px solid #fecdd3; }
+         /* Add style for Terminal */
+        .resultado-terminal { background-color: #ffe4e6; color: #881337; border: 1px solid #fecdd3; }
+        .resultado-loading { background-color: #e0e7ff; color: #3730a3; border: 1px solid #c7d2fe; } /* Estilo para "Cargando..." */
+
+        /* Alineación de checkboxes/radios */
+        input[type="checkbox"], input[type="radio"] {
+            margin-right: 0.5rem; /* mr-2 */
+            vertical-align: middle;
+        }
+        label {
+            vertical-align: middle;
+        }
+    </style>
+     <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+
+    <div class="bg-white p-6 md:p-8 rounded-xl shadow-lg w-full max-w-2xl">
+        <h1 class="text-2xl md:text-3xl font-bold text-center text-gray-800 mb-6">Formulario de Predicción de Estado Enfermedades</h1>
+
+        <form id="prediction-form" class="space-y-6">
+            <fieldset class="border border-gray-300 p-4 rounded-lg">
+                <legend class="text-lg font-semibold text-gray-700 px-2">Datos Demográficos</legend>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
+                    <div>
+                        <label for="age" class="block text-sm font-medium text-gray-700 mb-1">Edad:</label>
+                        <input type="number" id="age" name="age" min="0" max="120" class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label for="temperature" class="block text-sm font-medium text-gray-700 mb-1">Temperatura (°C):</label>
+                        <input type="number" id="temperature" name="temperature" step="0.1" min="30" max="45" class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Sexo:</label>
+                        <div class="flex items-center space-x-4">
+                            <label for="sex-f" class="flex items-center">
+                                <input type="radio" id="sex-f" name="sex" value="F" class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300">
+                                <span class="ml-2 text-sm text-gray-700">Femenino</span>
+                            </label>
+                            <label for="sex-m" class="flex items-center">
+                                <input type="radio" id="sex-m" name="sex" value="M" class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300">
+                                <span class="ml-2 text-sm text-gray-700">Masculino</span>
+                            </label>
+                             <label for="sex-na" class="flex items-center">
+                                <input type="radio" id="sex-na" name="sex" value="NA" checked class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300">
+                                <span class="ml-2 text-sm text-gray-700">No especificar</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </fieldset>
+
+            <fieldset class="border border-gray-300 p-4 rounded-lg">
+                <legend class="text-lg font-semibold text-gray-700 px-2">Síntomas (Marcar si están presentes)</legend>
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-2">
+                    <div class="flex items-center">
+                        <input type="checkbox" id="itching" name="itching" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                        <label for="itching" class="ml-2 block text-sm text-gray-900">Picazón (Itching)</label>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="skin_rash" name="skin_rash" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                        <label for="skin_rash" class="ml-2 block text-sm text-gray-900">Erupción Cutánea (Skin Rash)</label>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="continuous_sneezing" name="continuous_sneezing" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                        <label for="continuous_sneezing" class="ml-2 block text-sm text-gray-900">Estornudos Continuos</label>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="shivering" name="shivering" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                        <label for="shivering" class="ml-2 block text-sm text-gray-900">Escalofríos (Shivering)</label>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="joint_pain" name="joint_pain" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                        <label for="joint_pain" class="ml-2 block text-sm text-gray-900">Dolor Articular (Joint Pain)</label>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="stomach_pain" name="stomach_pain" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                        <label for="stomach_pain" class="ml-2 block text-sm text-gray-900">Dolor Estomacal (Stomach Pain)</label>
+                    </div>
+                </div>
+            </fieldset>
+
+            <div>
+                <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    Predecir Estado
+                </button>
+            </div>
+        </form>
+
+        <div id="resultado" class="mt-6 p-4 rounded-lg text-center font-semibold hidden">
+        </div>
+
+        <div class="mt-6 pt-6 border-t border-gray-200">
+             <h2 class="text-lg font-semibold text-gray-700 text-center mb-4">Descargar Reporte</h2>
+             <a href="/download_report" download="reporte_de_predicciones.txt" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gray-500 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400">
+                Descargar Reporte de Predicciones (.txt)
+             </a>
+        </div>
+        </div>
+
+    <script>
+        // Referencia al formulario y al div de resultado
+        const form = document.getElementById('prediction-form');
+        const resultadoDiv = document.getElementById('resultado');
+        const submitButton = form.querySelector('button[type="submit"]'); // Referencia al botón
+
+        // URL del endpoint del backend Flask (ajustar si es necesario)
+        const backendUrl = '/predict'; // Asume que Flask corre en el mismo dominio/puerto
+
+        // Function to assign CSS class based on result
+        function getResultClass(predictionText) {
+            if (predictionText.startsWith("ERROR:")) return 'resultado-error';
+            switch (predictionText) {
+                case "NO ENFERMO": return 'resultado-no-enfermo';
+                case "ENFERMEDAD LEVE": return 'resultado-leve';
+                case "ENFERMEDAD AGUDA": return 'resultado-aguda';
+                case "ENFERMEDAD CRÓNICA": return 'resultado-cronica';
+                case "ENFERMEDAD TERMINAL": return 'resultado-terminal'; // Add class for Terminal
+                default: return 'resultado-error'; // Default class for unexpected responses
+            }
+        }
+
+
+        // Event listener for form submission
+        form.addEventListener('submit', async function(event) {
+            event.preventDefault(); // Prevent actual form submission
+            submitButton.disabled = true; // Disable button while processing
+            resultadoDiv.textContent = 'Procesando...';
+            resultadoDiv.className = 'mt-6 p-4 rounded-lg text-center font-semibold resultado-loading'; // Loading style
+            resultadoDiv.classList.remove('hidden');
+
+            // --- Collect Form Data ---
+            const ageInput = document.getElementById('age').value;
+            const temperatureInput = document.getElementById('temperature').value;
+            const sexRadio = document.querySelector('input[name="sex"]:checked');
+
+            const age = ageInput ? parseInt(ageInput, 10) : null;
+            const temperature = temperatureInput ? parseFloat(temperatureInput) : null;
+            // Send null if 'NA' is selected or sex radio is not found/checked
+            const sex = sexRadio ? (sexRadio.value === 'NA' ? null : sexRadio.value) : null;
+
+
+            const formData = {
+                age: age,
+                sex: sex,
+                temperature: temperature,
+                itching: document.getElementById('itching').checked,
+                skin_rash: document.getElementById('skin_rash').checked,
+                continuous_sneezing: document.getElementById('continuous_sneezing').checked,
+                shivering: document.getElementById('shivering').checked,
+                joint_pain: document.getElementById('joint_pain').checked,
+                stomach_pain: document.getElementById('stomach_pain').checked
+            };
+
+            // --- Send Data to Flask Backend ---
+            try {
+                const response = await fetch(backendUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData), // Send data as JSON
+                });
+
+                // Use response.json() and check response.ok
+                const result = await response.json();
+
+                if (!response.ok) {
+                     // If the HTTP response is not successful (e.g. 400, 500)
+                     // The error message is expected to be in the 'prediction' field of the JSON response
+                     const errorText = result.prediction || `Error del servidor: ${response.status} ${response.statusText}`;
+                     throw new Error(errorText); // Throw an error to be caught by the catch block
+                 }
+
+
+                // --- Display Backend Result ---
+                const predictionText = result.prediction || "Error: Respuesta inesperada del servidor.";
+                resultadoDiv.textContent = predictionText;
+                resultadoDiv.className = 'mt-6 p-4 rounded-lg text-center font-semibold'; // Base classes
+                resultadoDiv.classList.add(getResultClass(predictionText)); // Add specific class
+
+            } catch (error) {
+                // --- Handle Errors (Network or Fetch Errors or server-side errors) ---
+                console.error('Error al contactar el backend:', error);
+                // Display the error message received or a generic one
+                resultadoDiv.textContent = error.message.startsWith('ERROR:') ? error.message : `Error de conexión o procesamiento: ${error.message}`;
+                resultadoDiv.className = 'mt-6 p-4 rounded-lg text-center font-semibold resultado-error';
+            } finally {
+                submitButton.disabled = false; // Re-enable the button
+                resultadoDiv.classList.remove('hidden'); // Ensure the div is visible
+            }
+        });
+    </script>
+
+</body>
+</html>
