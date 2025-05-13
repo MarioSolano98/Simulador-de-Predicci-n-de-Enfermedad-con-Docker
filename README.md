@@ -49,7 +49,7 @@ Este comando leerá el Dockerfile y creará la imagen flask_docker. Este proceso
 Una vez que la imagen ha sido construida con éxito, puedes ejecutar un contenedor a partir de ella. Ejecuta el siguiente comando:
 
 ```bash
-docker run -p 5000:5000 -d 
+docker run -p 5000:5000 -d flask_docker
 ```
 
 * docker run: El comando para ejecutar un contenedor.
